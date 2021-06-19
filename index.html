@@ -5,15 +5,35 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DTMF Decoder</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <style>
+    span {
+      display: inline-block;
+      margin: 5px 15px; 
+      margin-left: 0;
+    }
+    input, button {
+      line-height: 25px;
+    }
+    input {
+      min-width: 150px;
+    }
+    button {
+      box-shadow: 0 2px rgba(144, 144, 144, 0.5);
+    }
+    button:active {
+      box-shadow: none;
+    }
+  </style>
 </head>
 <body>
   <h2>DTMF Decoder</h2>
   <p>
-    <span style="margin-right: 15px;">
+    <span>
       <label for="file-selector">Audio file:</label>
       <input type="file" id="file-selector" accept="audio/*">
     </span>
-    <span title="smaller = more sensitive" style="margin-right: 15px;">
+    <span title="smaller = more sensitive">
       <label for="threshold-input">Sensitivity threshold:</label>
       <input type="number" id="threshold-input" min="0.000" max="1.000" step="0.001" value="0.050">
     </span>
@@ -21,7 +41,10 @@
       <button id="decode-button">Decode</button>
     </span>
   </p>
-  <pre id="output" style="background: whitesmoke; padding: 10px;"><i>waiting for an audio file...</i></pre>
+
+  <h3>Output</h3>
+  <pre><code id="output"><i>waiting for an audio file...</i></code></pre>
+
   <script src="Goertzel.js"></script>
   <script src="DTMFDecoder.js"></script>
   <script>
@@ -33,7 +56,8 @@
     let audioBuffer;
 
     function decode() {
-      output.innerHTML = "1s ".padStart(6, "0");
+      const secLength = 6;
+      output.innerHTML = "1s ".padStart(secLength, "0");
       const dtmfDecoder = new DTMFDecoder({
         energyThreshold: thresholdInput.value,
         sampleRate: audioBuffer.sampleRate
@@ -41,7 +65,6 @@
       const bufferSize = 320;
       const pcmData = audioBuffer.getChannelData(0);
       const pcmDataLength = pcmData.length - bufferSize;
-      const decodedLogInsertNewLine = audioBuffer.sampleRate;
       let decoded = "";
       let previous = "";
       for (let i = 0, j = 1; i <= pcmDataLength; i += bufferSize) {
@@ -51,12 +74,12 @@
           decoded += current;
           previous = current;
         }
-        if (i > 0 && i % decodedLogInsertNewLine === 0) {
-          output.innerHTML += "<br>" + (++j + "s ").padStart(6, "0");
+        if (i > 0 && i % audioBuffer.sampleRate === 0) {
+          output.innerHTML += "<br>" + (++j + "s ").padStart(secLength, "0");
         }
         output.innerHTML += !current ? "." : current;
       }
-      output.innerHTML += "<br><br>Decoded: " + decoded;
+      output.innerHTML += "<br><br><b>Decoded:</b> " + decoded;
     }
 
     fileSelector.addEventListener("change", event => {
